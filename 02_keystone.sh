@@ -18,12 +18,12 @@ echo manual | sudo tee /etc/init/keystone.override
 sudo apt-get install -y keystone apache2 libapache2-mod-wsgi
 
 # Create Keystone database
-mysql -u root -ppassword -e "CREATE DATABASE keystone;"
-mysql -u root -ppassword -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'notkeystone';"
-mysql -u root -ppassword -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'notkeystone';"
+mysql -u root -palexstack -e "CREATE DATABASE keystone;"
+mysql -u root -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'alexstack';"
+mysql -u root -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'alexstack';"
 
 # Configure Keystone
-sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection=mysql+pymysql://keystone:notkeystone@$MY_PRIVATE_IP/keystone|g" /etc/keystone/keystone.conf
+sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection=mysql+pymysql://keystone:alexstack@$MY_PRIVATE_IP/keystone|g" /etc/keystone/keystone.conf
 sudo sed -i "s|#provider = uuid|provider = fernet|g" /etc/keystone/keystone.conf
 
 # Initialize Keystone database
@@ -80,10 +80,10 @@ sudo service apache2 restart
 
 # Create the default domain, MyProject project, myadmin user and admin role with the keystone bootstrap command.
 # This will also add myadmin to MyProject with the admin role.
-sudo -u keystone keystone-manage bootstrap --bootstrap-username myadmin --bootstrap-password mypassword --bootstrap-project-name MyProject
+sudo -u keystone keystone-manage bootstrap --bootstrap-username myadmin --bootstrap-password alexstack --bootstrap-project-name MyProject
 
 # Get a token and set it as the TOKEN_ID variable
-TOKEN_ID=`openstack token issue --os-username myadmin --os-project-name MyProject --os-user-domain-id default --os-project-domain-id default --os-identity-api-version 3 --os-auth-url http://localhost:5000/v3 --os-password mypassword | grep " id" | cut -d '|' -f 3`
+TOKEN_ID=`openstack token issue --os-username myadmin --os-project-name MyProject --os-user-domain-id default --os-project-domain-id default --os-identity-api-version 3 --os-auth-url http://localhost:5000/v3 --os-password alexstack | grep " id" | cut -d '|' -f 3`
 
 # Populate service in service catalog
 openstack service create --name keystone --description "OpenStack Identity" identity --os-token $TOKEN_ID --os-url http://localhost:5000/v3 --os-identity-api-version 3
@@ -101,7 +101,7 @@ openstack endpoint create --region RegionOne identity admin http://$MY_PRIVATE_I
 openstack project create --domain default --description "Service Project" Service --os-token $TOKEN_ID --os-url http://localhost:5000/v3 --os-identity-api-version 3
 
 # Create the 'myuser' user
-openstack user create --domain default --password mypassword myuser --os-token $TOKEN_ID --os-url http://localhost:5000/v3 --os-identity-api-version 3 
+openstack user create --domain default --password alexstack myuser --os-token $TOKEN_ID --os-url http://localhost:5000/v3 --os-identity-api-version 3 
 
 # Create the 'user' role
 openstack role create _member_ --os-token $TOKEN_ID --os-url http://localhost:5000/v3 --os-identity-api-version 3
