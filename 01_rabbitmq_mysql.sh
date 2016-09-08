@@ -16,9 +16,12 @@ release=`lsb_release -c | awk '{print $2}'`
 # Install Ubuntu Cloud Keyring and Repository Manager
 sudo apt-get install -y software-properties-common
 
-# Install Ubuntu Cloud Archive repository for Mitaka
+# Install Ubuntu Cloud Archive repository
 if [ "$release" == "trusty" ]; then
     sudo add-apt-repository -y cloud-archive:mitaka
+fi
+if [ "$release" == "xenial" ]; then
+    sudo add-apt-repository -y cloud-archive:newton
 fi
 
 # Download the latest package index to ensure you get Mitaka packages
