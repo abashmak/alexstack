@@ -23,7 +23,7 @@ mysql -uroot -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' I
 mysql -uroot -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'alexstack';"
 
 # Configure Keystone
-sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection=mysql+pymysql://keystone:alexstack@$MY_PRIVATE_IP/keystone|g" /etc/keystone/keystone.conf
+sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection = mysql+pymysql://keystone:alexstack@$MY_PRIVATE_IP/keystone|g" /etc/keystone/keystone.conf
 sudo sed -i "s|#provider = uuid|provider = fernet|g" /etc/keystone/keystone.conf
 
 # Initialize Keystone database
