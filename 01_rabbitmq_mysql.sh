@@ -24,7 +24,7 @@ if [ "$release" == "xenial" ]; then
     sudo add-apt-repository -y cloud-archive:newton
 fi
 
-# Download the latest package index to ensure you get Mitaka packages
+# Update the package index to get the new repo packages
 sudo apt-get update
 
 # Install Chrony
@@ -45,13 +45,12 @@ sudo rabbitmq-plugins enable rabbitmq_management
 # Grant RabbitMQ openstack user the administrator tag
 sudo rabbitmqctl set_user_tags openstack administrator
 
-# Preseed MariaDB install for ubuntu-trusty
+# Preseed MariaDB install for
 if [ "$release" == "trusty" ]; then
-    cat <<EOF | sudo debconf-set-selections
-mariadb-server-5.5 mysql-server/root_password password alexstack
-mariadb-server-5.5 mysql-server/root_password_again password alexstack
-mariadb-server-5.5 mysql-server/start_on_boot boolean true
-EOF
+    sudo debconf-set-selections <<< 'mariadb-server-5.5 mysql-server/start_on_boot boolean true'
+fi
+if [ "$release" == "xenial" ]; then
+    sudo debconf-set-selections <<< 'mariadb-server-10.0 mysql-server/start_on_boot boolean true'
 fi
 
 # Install MariaDB
@@ -60,17 +59,17 @@ sudo apt-get install -y mariadb-server python-pymysql
 
 # Configure MariaDB
 if [ "$release" == "xenial" ]; then
-    sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/mariadb.conf.d/50-server.cnf
-    cat <<EOF | sudo debconf-set-selections
-mariadb-server-10.0 mysql-server/start_on_boot boolean true
-EOF
-    echo "update user set plugin='' where User='root'" | sudo mysql -uroot mysql
-    echo "flush privileges" | sudo mysql -uroot mysql
-    echo "update user set password=PASSWORD(\"alexstack\" where User='root'" | sudo mysql -uroot mysql
-    echo "flush privileges" | sudo mysql -uroot mysql
-else
     sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
 fi
+if [ "$release" == "xenial" ]; then
+    sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/mariadb.conf.d/50-server.cnf
+fi
+
+# Set root user password
+echo "update user set plugin='' where User='root'" | sudo mysql -uroot mysql
+echo "flush privileges" | sudo mysql -uroot mysql
+echo "update user set password=PASSWORD(\"alexstack\") where User='root'" | sudo mysql -uroot mysql
+echo "flush privileges" | sudo mysql -uroot mysql
 
 # Restart MariaDB
 sudo service mysql restart

@@ -18,9 +18,9 @@ echo manual | sudo tee /etc/init/keystone.override
 sudo apt-get install -y keystone apache2 libapache2-mod-wsgi
 
 # Create Keystone database
-mysql -u root -palexstack -e "CREATE DATABASE keystone;"
-mysql -u root -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'alexstack';"
-mysql -u root -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'alexstack';"
+mysql -uroot -palexstack -e "CREATE DATABASE keystone;"
+mysql -uroot -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'alexstack';"
+mysql -uroot -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'alexstack';"
 
 # Configure Keystone
 sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection=mysql+pymysql://keystone:alexstack@$MY_PRIVATE_IP/keystone|g" /etc/keystone/keystone.conf
