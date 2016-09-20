@@ -56,13 +56,27 @@ fi
 # Install MariaDB
 sudo apt-get install -y mariadb-server python-pymysql
 
-
 # Configure MariaDB
-if [ "$release" == "xenial" ]; then
+if [ "$release" == "trusty" ]; then
     sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
 fi
 if [ "$release" == "xenial" ]; then
-    sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/mariadb.conf.d/50-server.cnf
+    cnf="/tmp/tmp$$"
+    cp /etc/mysql/my.cnf $cnf
+    echo >> $cnf
+    echo "[mysqld]" >> $cnf
+    echo "query_cache_size = 0" >> $cnf
+    echo "query_cache_type = OFF" >> $cnf
+    echo "max_connections = 1024" >> $cnf
+    echo "default-storage-engine = InnoDB" >> $cnf
+    echo "sql_mode = STRICT_ALL_TABLES" >> $cnf
+    echo "innodb_file_per_table" >> $cnf
+    echo "character-set-server = utf8" >> $cnf
+    echo "collation-server = utf8_general_ci" >> $cnf
+    echo "bind-address = 0.0.0.0" >> $cnf
+    sudo mv $cnf /etc/mysql/my.cnf
+    sudo chown root /etc/mysql/my.cnf
+    sudo chgrp root /etc/mysql/my.cnf
 fi
 
 # Set root user password
