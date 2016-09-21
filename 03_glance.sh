@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-if [ -z ${MY_PRIVATE_IP+x} ]; then
-    nic=`ls -og /sys/class/net | grep -v virtual | awk '{print $7}' | tr '\n' ' '`
-    export MY_PRIVATE_IP=`ip a | grep $nic'$' | awk '{print $2}' | awk -F'/' '{print $1}'`
-fi
-if [ -z ${MY_PUBLIC_IP+x} ]; then
-  if [ -z ${1+x} ]; then
-    echo "Public IP not set and not provided, using private IP"
-    export MY_PUBLIC_IP=$MY_PRIVATE_IP
-  fi
+if [ -f "common.sh" ]; then
+    source common.sh
+else
+    echo 'Please run the installation from the "alexstack" directory'
+    exit 1
 fi
 
 # Install Glance - OpenStack Image Service
@@ -19,15 +15,15 @@ sudo service glance-api stop
 sudo service glance-registry stop
 
 # Create Glance database
-mysql -u root -pnotmysql -e "CREATE DATABASE glance;"
-mysql -u root -pnotmysql -e "GRANT ALL ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'notglance';"
-mysql -u root -pnotmysql -e "GRANT ALL ON glance.* TO 'glance'@'%' IDENTIFIED BY 'notglance';"
+mysql -u root -palexstack -e "CREATE DATABASE glance;"
+mysql -u root -palexstack -e "GRANT ALL ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'alexstack';"
+mysql -u root -palexstack -e "GRANT ALL ON glance.* TO 'glance'@'%' IDENTIFIED BY 'alexstack';"
 
 # Use 'admin' credentials
-source ~/credentials/myadmin
+source ~/credentials/admin
 
 # Create Glance service user
-openstack user create --domain default --password notglance glance
+openstack user create --domain default --password alexstack glance
 
 # Add the admin role to the glance user and service project
 openstack role add --project Service --user glance admin
@@ -48,13 +44,13 @@ openstack endpoint create --region RegionOne image admin http://$MY_PRIVATE_IP:9
 openstack catalog list
 
 # Configure glance-api
-sudo sed -i "s|#connection = <None>|connection=mysql+pymysql://glance:notglance@$MY_PRIVATE_IP/glance|g" /etc/glance/glance-api.conf
-sudo sed -i "s|#auth_uri = <None>|auth_uri = http://$MY_PRIVATE_IP:5000\nauth_url = http://$MY_PRIVATE_IP:35357\nmemcached_servers = $MY_PRIVATE_IP:11211\nauth_type = password\nproject_domain_name = default\nuser_domain_name = default\nproject_name = Service\nusername = glance\npassword = notglance|g" /etc/glance/glance-api.conf
+sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:alexstack@localhost/glance|g" /etc/glance/glance-api.conf
+sudo sed -i "s|#auth_uri = <None>|auth_uri = http://$MY_PRIVATE_IP:5000\nauth_url = http://$MY_PRIVATE_IP:35357\nmemcached_servers = $MY_PRIVATE_IP:11211\nauth_type = password\nproject_domain_name = default\nuser_domain_name = default\nproject_name = Service\nusername = glance\npassword = alexstack|g" /etc/glance/glance-api.conf
 sudo sed -i "s|#flavor = <None>|flavor = keystone|g" /etc/glance/glance-api.conf
 
 # Configure glance-registry
-sudo sed -i "s|#connection = <None>|connection=mysql+pymysql://glance:notglance@$MY_PRIVATE_IP/glance|g" /etc/glance/glance-registry.conf
-sudo sed -i "s|#auth_uri = <None>|auth_uri = http://$MY_PRIVATE_IP:5000\nauth_url = http://$MY_PRIVATE_IP:35357\nmemcached_servers = $MY_PRIVATE_IP:11211\nauth_type = password\nproject_domain_name = default\nuser_domain_name = default\nproject_name = Service\nusername = glance\npassword = notglance|g" /etc/glance/glance-registry.conf
+sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:alexstack@localhost/glance|g" /etc/glance/glance-registry.conf
+sudo sed -i "s|#auth_uri = <None>|auth_uri = http://$MY_PRIVATE_IP:5000\nauth_url = http://$MY_PRIVATE_IP:35357\nmemcached_servers = $MY_PRIVATE_IP:11211\nauth_type = password\nproject_domain_name = default\nuser_domain_name = default\nproject_name = Service\nusername = glance\npassword = alexstack|g" /etc/glance/glance-registry.conf
 sudo sed -i "s|#flavor = <None>|flavor = keystone|g" /etc/glance/glance-registry.conf
 
 # Initialize Glance database
