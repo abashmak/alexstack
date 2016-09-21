@@ -47,6 +47,8 @@ sudo rabbitmqctl set_user_tags openstack administrator
 
 # Preseed MariaDB install for
 if [ "$release" == "trusty" ]; then
+    sudo debconf-set-selections <<< 'mariadb-server-5.5 mysql-server/root_password password alexstack'
+    sudo debconf-set-selections <<< 'mariadb-server-5.5 mysql-server/root_password_again password alexstack'
     sudo debconf-set-selections <<< 'mariadb-server-5.5 mysql-server/start_on_boot boolean true'
 fi
 if [ "$release" == "xenial" ]; then
@@ -55,7 +57,7 @@ fi
 
 # Install MariaDB
 sudo apt-get install -y mariadb-server python-pymysql
-exit
+
 # Configure MariaDB
 if [ "$release" == "trusty" ]; then
     sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
@@ -64,32 +66,26 @@ if [ "$release" == "xenial" ]; then
     sudo sed -i "s/127.0.0.1/0.0.0.0\nskip-name-resolve\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/mariadb.conf.d/50-server.cnf
     sudo sed -i "/character-set-server/c\character-set-server = utf8" /etc/mysql/mariadb.conf.d/50-server.cnf
     sudo sed -i "/collation-server/c\collation-server = utf8_general_ci" /etc/mysql/mariadb.conf.d/50-server.cnf
-#    cnf="/tmp/tmp$$"
-#    cp /etc/mysql/my.cnf $cnf
-#    echo >> $cnf
-#    echo "[mysqld]" >> $cnf
-#    echo "query_cache_size = 0" >> $cnf
-#    echo "query_cache_type = OFF" >> $cnf
-#    echo "max_connections = 1024" >> $cnf
-#    echo "default-storage-engine = InnoDB" >> $cnf
-#    echo "sql_mode = STRICT_ALL_TABLES" >> $cnf
-#    echo "innodb_file_per_table" >> $cnf
-#    echo "character-set-server = utf8" >> $cnf
-#    echo "collation-server = utf8_general_ci" >> $cnf
-#    echo "bind-address = 0.0.0.0" >> $cnf
-#    sudo mv $cnf /etc/mysql/my.cnf
-#    sudo chown root /etc/mysql/my.cnf
-#    sudo chgrp root /etc/mysql/my.cnf
+    # TODO: determine if these also need to be set
+    # query_cache_size = 0
+    # query_cache_type = OFF
+    # max_connections = 4096
+    # sql_mode = STRICT_ALL_TABLES
 fi
-
-# Set root user password
-#echo "update user set plugin='' where User='root'" | sudo mysql -uroot mysql
-#echo "flush privileges" | sudo mysql -uroot mysql
-#echo "update user set password=PASSWORD(\"alexstack\") where User='root'" | sudo mysql -uroot mysql
-#echo "flush privileges" | sudo mysql -uroot mysql
 
 # Restart MariaDB
 sudo service mysql restart
+
+if [ "$release" == "xenial" ]; then
+    # Set root user password
+    echo "update user set plugin='' where User='root'" | sudo mysql -uroot mysql
+    echo "flush privileges" | sudo mysql -uroot mysql
+    echo "update user set password=PASSWORD(\"alexstack\") where User='root'" | sudo mysql -uroot mysql
+    echo "flush privileges" | sudo mysql -uroot mysql
+
+    # Restart MariaDB again
+    sudo service mysql restart
+fi
 
 # Install Memcached
 sudo apt-get install -y memcached python-memcache

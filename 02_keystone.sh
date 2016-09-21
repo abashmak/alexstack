@@ -23,7 +23,7 @@ mysql -uroot -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' I
 mysql -uroot -palexstack -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'alexstack';"
 
 # Configure Keystone
-sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection = mysql+pymysql://keystone:alexstack@$MY_PRIVATE_IP/keystone|g" /etc/keystone/keystone.conf
+sudo sed -i "s|connection = sqlite:////var/lib/keystone/keystone.db|connection = mysql+pymysql://keystone:alexstack@localhost/keystone|g" /etc/keystone/keystone.conf
 sudo sed -i "s|#provider = uuid|provider = fernet|g" /etc/keystone/keystone.conf
 
 # Initialize Keystone database
@@ -42,7 +42,7 @@ cat <<EOF | sudo tee /etc/apache2/sites-available/wsgi-keystone.conf
 Listen 5000
 Listen 35357
 <VirtualHost *:5000>
-    WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+    WSGIDaemonProcess keystone-public_1 processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
     WSGIProcessGroup keystone-public
     WSGIScriptAlias / /usr/bin/keystone-wsgi-public
     WSGIApplicationGroup %{GLOBAL}
@@ -57,7 +57,7 @@ Listen 35357
 </VirtualHost>
 
 <VirtualHost *:35357>
-    WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+    WSGIDaemonProcess keystone-admin_1 processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
     WSGIProcessGroup keystone-admin
     WSGIScriptAlias / /usr/bin/keystone-wsgi-admin
     WSGIApplicationGroup %{GLOBAL}
