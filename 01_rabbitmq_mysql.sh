@@ -63,13 +63,10 @@ if [ "$release" == "trusty" ]; then
     sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
 fi
 if [ "$release" == "xenial" ]; then
-    sudo sed -i "s/127.0.0.1/0.0.0.0\nskip-name-resolve\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/mariadb.conf.d/50-server.cnf
+    sudo sed -i "s/127.0.0.1/0.0.0.0\nskip-name-resolve\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table\nmax_connections = 4096\nquery_cache_size = 0\nquery_cache_type = OFF/g" /etc/mysql/mariadb.conf.d/50-server.cnf
     sudo sed -i "/character-set-server/c\character-set-server = utf8" /etc/mysql/mariadb.conf.d/50-server.cnf
     sudo sed -i "/collation-server/c\collation-server = utf8_general_ci" /etc/mysql/mariadb.conf.d/50-server.cnf
-    # TODO: determine if these also need to be set
-    # query_cache_size = 0
-    # query_cache_type = OFF
-    # max_connections = 4096
+    # TODO: determine if this also needs to be set
     # sql_mode = STRICT_ALL_TABLES
 fi
 
