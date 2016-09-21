@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
 
-if [ -z ${MY_PRIVATE_IP+x} ]; then
-    nic=`ls -og /sys/class/net | grep -v virtual | awk '{print $7}' | tr '\n' ' '`
-    export MY_PRIVATE_IP=`ip a | grep $nic'$' | awk '{print $2}' | awk -F'/' '{print $1}'`
+if [ -f "common.sh" ]; then
+    source common.sh
+else
+    echo 'Please run the installation from the "alexstack" directory'
+    exit 1
 fi
-if [ -z ${MY_PUBLIC_IP+x} ]; then
-  if [ -z ${1+x} ]; then
-    echo "Public IP not set and not provided, using private IP"
-    export MY_PUBLIC_IP=$MY_PRIVATE_IP
-  fi
-fi
-
-release=`lsb_release -c | awk '{print $2}'`
 
 # Install Ubuntu Cloud Keyring and Repository Manager
 sudo apt-get install -y software-properties-common
@@ -60,7 +54,7 @@ sudo apt-get install -y mariadb-server python-pymysql
 
 # Configure MariaDB
 if [ "$release" == "trusty" ]; then
-    sudo sed -i "s/127.0.0.1/$MY_PRIVATE_IP\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
+    sudo sed -i "s/127.0.0.1/0.0.0.0\nskip-name-resolve\ncharacter-set-server = utf8\ncollation-server = utf8_general_ci\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table/g" /etc/mysql/my.cnf
 fi
 if [ "$release" == "xenial" ]; then
     sudo sed -i "s/127.0.0.1/0.0.0.0\nskip-name-resolve\ninit-connect = 'SET NAMES utf8'\ninnodb_file_per_table\nmax_connections = 4096\nquery_cache_size = 0\nquery_cache_type = OFF/g" /etc/mysql/mariadb.conf.d/50-server.cnf

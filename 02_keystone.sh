@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-if [ -z ${MY_PRIVATE_IP+x} ]; then
-    nic=`ls -og /sys/class/net | grep -v virtual | awk '{print $7}' | tr '\n' ' '`
-    export MY_PRIVATE_IP=`ip a | grep $nic'$' | awk '{print $2}' | awk -F'/' '{print $1}'`
-fi
-if [ -z ${MY_PUBLIC_IP+x} ]; then
-  if [ -z ${1+x} ]; then
-    echo "Public IP not set and not provided, using private IP"
-    export MY_PUBLIC_IP=$MY_PRIVATE_IP
-  fi
+if [ -f "common.sh" ]; then
+    source common.sh
+else
+    echo 'Please run the installation from the "alexstack" directory'
+    exit 1
 fi
 
 # Prevent Keystone from starting automatically
@@ -37,8 +33,9 @@ sudo -u keystone keystone-manage fernet_setup --keystone-user keystone --keyston
 ServerName $MY_PRIVATE_IP
 EOF
 
-# Create and configure Keystone virtual hosts file
-cat <<EOF | sudo tee /etc/apache2/sites-available/wsgi-keystone.conf
+if [ "$release" == "trusty" ]; then
+    # Create and configure Keystone virtual hosts file
+    cat <<EOF | sudo tee /etc/apache2/sites-available/wsgi-keystone.conf
 Listen 5000
 Listen 35357
 <VirtualHost *:5000>
@@ -72,8 +69,9 @@ Listen 35357
 </VirtualHost>
 EOF
 
-# Enable the Keystone virtual host:
-sudo a2ensite wsgi-keystone
+    # Enable the Keystone virtual host:
+    sudo a2ensite wsgi-keystone
+fi
 
 # Restart the Apache HTTP server:
 sudo service apache2 restart
