@@ -55,6 +55,9 @@ sudo sed -i "s|#flavor = <None>|flavor = keystone|g" /etc/glance/glance-registry
 
 # Initialize Glance database
 sudo -u glance glance-manage db_sync
+echo "alter table images modify column id int(11)" > tmp$$
+mysql -uroot -palexstack glance < tmp$$; rm tmp$$
+sudo -u glance glance-manage db_sync
 
 # Start Glance
 sudo service glance-registry start
@@ -79,4 +82,5 @@ glance image-create --name "cirros-threepart-kernel" --disk-format aki --contain
 KERNEL_ID=`glance image-list | awk '/ cirros-threepart-kernel / { print $2 }'`
 glance image-create --name "cirros-threepart-ramdisk" --disk-format ari --container-format ari --file ~/images/cirros-0.3.4-x86_64-initrd
 RAMDISK_ID=`glance image-list |  awk '/ cirros-threepart-ramdisk / { print $2 }'`
-glance image-create --name "cirros-threepart" --disk-format ami --container-format ami --property kernel_id=$KERNEL_ID --property ramdisk_id=$RAMDISK_ID --file ~/images/cirros-0.3.4-x86_64-blank.img
+glance image-create --name "cirros-threepart" --disk-format ami --container-format ami --property kernel_id=$KERNEL_ID --property \
+ramdisk_id=$RAMDISK_ID --file ~/images/cirros-0.3.4-x86_64-blank.img
