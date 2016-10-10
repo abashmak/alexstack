@@ -53,6 +53,10 @@ sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:alexstac
 sudo sed -i "s|#auth_uri = <None>|auth_uri = http://$MY_PRIVATE_IP:5000\nauth_url = http://$MY_PRIVATE_IP:35357\nmemcached_servers = $MY_PRIVATE_IP:11211\nauth_type = password\nproject_domain_name = default\nuser_domain_name = default\nproject_name = Service\nusername = glance\npassword = alexstack|g" /etc/glance/glance-registry.conf
 sudo sed -i "s|#flavor = <None>|flavor = keystone|g" /etc/glance/glance-registry.conf
 
+echo "alter table images modify column id int(11)" > tmp$$
+mysql -uroot -palexstack glance < tmp$$
+rm tmp$$
+
 # Initialize Glance database
 sudo -u glance glance-manage db_sync
 echo "alter table images modify column id int(11)" > tmp$$
