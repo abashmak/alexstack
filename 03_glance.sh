@@ -55,9 +55,6 @@ sudo sed -i "s|#flavor = <None>|flavor = keystone|g" /etc/glance/glance-registry
 
 # Initialize Glance database
 sudo -u glance glance-manage db_sync
-echo "alter table images modify column id int(11)" > tmp$$
-mysql -uroot -palexstack glance < tmp$$; rm tmp$$
-sudo -u glance glance-manage db_sync
 
 # Start Glance
 sudo service glance-registry start
